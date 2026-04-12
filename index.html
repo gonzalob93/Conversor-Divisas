@@ -7,594 +7,398 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #ffffff;
-      --bg-secondary: #f5f5f3;
-      --bg-tertiary: #eeede8;
-      --text-primary: #1a1a1a;
-      --text-secondary: #6b6b6b;
-      --text-tertiary: #9b9b9b;
-      --border: rgba(0,0,0,0.12);
-      --border-strong: rgba(0,0,0,0.25);
-      --accent: #185FA5;
-      --accent-bg: #E6F1FB;
-      --success: #3B6D11;
-      --danger: #A32D2D;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --font-mono: 'SF Mono', 'Fira Code', monospace;
+      --bg:#ffffff; --bg2:#f5f5f3; --bg3:#eeede8;
+      --tx:#1a1a1a; --tx2:#6b6b6b; --tx3:#9b9b9b;
+      --bd:rgba(0,0,0,0.12); --bd2:rgba(0,0,0,0.25);
+      --accent:#185FA5; --accent-bg:#E6F1FB;
+      --ok:#3B6D11; --err:#A32D2D;
+      --r:8px; --rl:12px; --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #1e1e1e;
-        --bg-secondary: #2a2a2a;
-        --bg-tertiary: #333333;
-        --text-primary: #f0f0f0;
-        --text-secondary: #a0a0a0;
-        --text-tertiary: #6b6b6b;
-        --border: rgba(255,255,255,0.1);
-        --border-strong: rgba(255,255,255,0.22);
-        --accent: #85B7EB;
-        --accent-bg: #0c2a45;
-        --success: #97C459;
-        --danger: #F09595;
-      }
-    }
-
-    body {
-      font-family: var(--font);
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      padding: 2rem 1rem;
-    }
-
-    .container { max-width: 760px; margin: 0 auto; }
-
-    header { margin-bottom: 2rem; }
-    header h1 { font-size: 22px; font-weight: 500; color: var(--text-primary); }
-    header p { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
-    header .bcra-link { color: var(--accent); text-decoration: none; font-size: 13px; display: inline-block; margin-top: 6px; }
-    header .bcra-link:hover { text-decoration: underline; }
-
-    .card {
-      background: var(--bg);
-      border: 0.5px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-    }
-
-    .section-label {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 12px;
-    }
-
-    .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-
-    .field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 130px; }
-    .field label { font-size: 12px; color: var(--text-secondary); }
-
-    input, select {
-      height: 36px;
-      width: 100%;
-      background: var(--bg);
-      border: 0.5px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      padding: 0 10px;
-      font-size: 14px;
-      color: var(--text-primary);
-      font-family: var(--font);
-      outline: none;
-      transition: border-color .15s;
-    }
-    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent); }
-
-    .icon-btn {
-      background: var(--bg-secondary);
-      border: 0.5px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      width: 36px; height: 36px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 17px; color: var(--text-primary);
-      flex-shrink: 0; align-self: flex-end;
-      transition: background .1s;
-    }
-    .icon-btn:hover { background: var(--bg-tertiary); }
-
-    button.primary {
-      background: var(--bg);
-      border: 0.5px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      padding: 0 18px; height: 36px;
-      cursor: pointer; font-size: 13px; font-weight: 500;
-      color: var(--text-primary); font-family: var(--font);
-      transition: background .1s; white-space: nowrap; align-self: flex-end;
-    }
-    button.primary:hover { background: var(--bg-secondary); }
-
-    .status-row {
-      display: flex; align-items: center; gap: 7px;
-      font-size: 12px; color: var(--text-secondary); margin-top: 10px;
-    }
-    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
-    .dot.loading { background: #BA7517; animation: pulse 1s ease-in-out infinite; }
-    .dot.error { background: var(--danger); }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-    .err-box {
-      font-size: 12px; color: var(--danger);
-      background: color-mix(in srgb, var(--danger) 10%, transparent);
-      border-radius: var(--radius-md);
-      padding: 8px 12px; margin-top: 8px;
-      border: 0.5px solid color-mix(in srgb, var(--danger) 30%, transparent);
-    }
-
-    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(0,1fr)); gap: 10px; margin-top: 1rem; }
-    .metric { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 1rem; }
-    .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-    .metric-value { font-size: 20px; font-weight: 500; color: var(--text-primary); word-break: break-all; }
-    .metric-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
-
-    .period-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    .period-btn {
-      background: var(--bg-secondary); border: 0.5px solid var(--border);
-      border-radius: var(--radius-md); padding: 4px 10px;
-      cursor: pointer; font-size: 12px; color: var(--text-secondary);
-      font-family: var(--font); transition: all .1s;
-    }
-    .period-btn.active {
-      background: var(--bg); border-color: var(--border-strong);
-      color: var(--text-primary); font-weight: 500;
-    }
-
-    .chart-wrap { position: relative; width: 100%; height: 230px; margin-top: 14px; }
-
-    .hist-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-    .hist-stats .metric { flex: 1; min-width: 100px; }
-    .hist-stats .metric-value { font-size: 16px; }
-    .trend-up { color: var(--success); }
-    .trend-dn { color: var(--danger); }
-
-    .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .pill {
-      background: var(--bg-secondary); border: 0.5px solid var(--border);
-      border-radius: 20px; padding: 3px 10px;
-      font-size: 12px; display: flex; gap: 5px; align-items: center;
-    }
-    .pill-code { font-weight: 500; color: var(--text-primary); }
-    .pill-val { color: var(--text-secondary); }
-
-    footer {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-tertiary);
-      margin-top: 1.5rem;
-      padding-bottom: 1rem;
-    }
-    footer a { color: var(--accent); text-decoration: none; }
-
-    @media (max-width: 520px) {
-      .row { flex-direction: column; align-items: stretch; }
-      .icon-btn { align-self: flex-start; }
-      button.primary { align-self: stretch; }
-    }
+    @media(prefers-color-scheme:dark){:root{
+      --bg:#1e1e1e; --bg2:#2a2a2a; --bg3:#333;
+      --tx:#f0f0f0; --tx2:#a0a0a0; --tx3:#6b6b6b;
+      --bd:rgba(255,255,255,0.1); --bd2:rgba(255,255,255,0.22);
+      --accent:#85B7EB; --accent-bg:#0c2a45;
+      --ok:#97C459; --err:#F09595;
+    }}
+    body{font-family:var(--font);background:var(--bg3);color:var(--tx);min-height:100vh;padding:2rem 1rem}
+    .container{max-width:760px;margin:0 auto}
+    header{margin-bottom:2rem}
+    header h1{font-size:22px;font-weight:500}
+    header p{font-size:14px;color:var(--tx2);margin-top:4px}
+    header a{color:var(--accent);text-decoration:none;font-size:13px;display:inline-block;margin-top:6px}
+    .card{background:var(--bg);border:0.5px solid var(--bd);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem}
+    .lbl{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);margin-bottom:12px}
+    .row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px}
+    .field label{font-size:12px;color:var(--tx2)}
+    input,select{height:36px;width:100%;background:var(--bg);border:0.5px solid var(--bd2);border-radius:var(--r);padding:0 10px;font-size:14px;color:var(--tx);font-family:var(--font);outline:none;transition:border-color .15s}
+    input:focus,select:focus{border-color:var(--accent)}
+    .ibtn{background:var(--bg2);border:0.5px solid var(--bd2);border-radius:var(--r);width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--tx);flex-shrink:0;align-self:flex-end;transition:background .1s}
+    .ibtn:hover{background:var(--bg3)}
+    .pbtn{background:var(--bg);border:0.5px solid var(--bd2);border-radius:var(--r);padding:0 18px;height:36px;cursor:pointer;font-size:13px;font-weight:500;color:var(--tx);font-family:var(--font);transition:background .1s;white-space:nowrap;align-self:flex-end}
+    .pbtn:hover{background:var(--bg2)}
+    .srow{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--tx2);margin-top:10px}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex-shrink:0}
+    .dot.loading{background:#BA7517;animation:pulse 1s ease-in-out infinite}
+    .dot.error{background:var(--err)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .ebox{font-size:12px;color:var(--err);background:color-mix(in srgb,var(--err) 10%,transparent);border-radius:var(--r);padding:8px 12px;margin-top:8px;border:0.5px solid color-mix(in srgb,var(--err) 30%,transparent)}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:10px;margin-top:1rem}
+    .metric{background:var(--bg2);border-radius:var(--r);padding:1rem}
+    .metric-lbl{font-size:12px;color:var(--tx2);margin-bottom:6px}
+    .metric-val{font-size:20px;font-weight:500;color:var(--tx);word-break:break-all}
+    .metric-sub{font-size:11px;color:var(--tx3);margin-top:4px}
+    .prow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+    .pbtn2{background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r);padding:4px 10px;cursor:pointer;font-size:12px;color:var(--tx2);font-family:var(--font);transition:all .1s}
+    .pbtn2.active{background:var(--bg);border-color:var(--bd2);color:var(--tx);font-weight:500}
+    .chart-wrap{position:relative;width:100%;height:230px;margin-top:14px}
+    .hstats{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .hstats .metric{flex:1;min-width:100px}
+    .hstats .metric-val{font-size:16px}
+    .tup{color:var(--ok)}.tdn{color:var(--err)}
+    .pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .pill{background:var(--bg2);border:0.5px solid var(--bd);border-radius:20px;padding:3px 10px;font-size:12px;display:flex;gap:5px;align-items:center}
+    .pill b{font-weight:500;color:var(--tx)}
+    .pill span{color:var(--tx2)}
+    footer{text-align:center;font-size:12px;color:var(--tx3);margin-top:1.5rem;padding-bottom:1rem}
+    footer a{color:var(--accent);text-decoration:none}
+    @media(max-width:520px){.row{flex-direction:column;align-items:stretch}.ibtn,.pbtn{align-self:flex-start}}
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Conversor de divisas</h1>
-      <p>Cotizaciones oficiales publicadas por el Banco Central de la República Argentina</p>
-      <a class="bcra-link" href="https://estadisticascambiarias.bcra.gob.ar" target="_blank" rel="noopener">
-        estadisticascambiarias.bcra.gob.ar ↗
-      </a>
-    </header>
+<div class="container">
+  <header>
+    <h1>Conversor de divisas</h1>
+    <p>Cotizaciones oficiales publicadas por el Banco Central de la República Argentina</p>
+    <a href="https://www.bcra.gob.ar/Catalogo/apis.asp" target="_blank" rel="noopener">API oficial BCRA ↗</a>
+  </header>
 
-    <!-- Conversión -->
-    <div class="card">
-      <div class="section-label">Conversión</div>
-      <div class="row">
-        <div class="field">
-          <label for="amount">Monto</label>
-          <input type="number" id="amount" value="1000" min="0" step="any">
-        </div>
-        <div class="field">
-          <label for="from-cur">Origen</label>
-          <select id="from-cur"></select>
-        </div>
-        <button class="icon-btn" onclick="swap()" title="Invertir par" aria-label="Invertir monedas">⇄</button>
-        <div class="field">
-          <label for="to-cur">Destino</label>
-          <select id="to-cur"></select>
-        </div>
-        <button class="primary" onclick="convert()">Convertir</button>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <div class="field" style="max-width:190px">
-          <label for="date-input">Fecha de cotización</label>
-          <input type="date" id="date-input">
-        </div>
-        <button class="primary" onclick="loadByDate()">Cargar fecha</button>
-        <button class="primary" onclick="loadLatest()">Hoy</button>
-      </div>
-
-      <div class="status-row">
-        <span class="dot loading" id="sdot"></span>
-        <span id="stxt">Cargando cotizaciones del BCRA...</span>
-      </div>
-      <div id="errbox" style="display:none" class="err-box" role="alert"></div>
-
-      <div id="result-area" style="display:none">
-        <div class="metrics" id="metrics-row"></div>
-      </div>
+  <div class="card">
+    <div class="lbl">Conversión</div>
+    <div class="row">
+      <div class="field"><label for="amount">Monto</label><input type="number" id="amount" value="1000" min="0" step="any"></div>
+      <div class="field"><label for="from-cur">Origen</label><select id="from-cur"></select></div>
+      <button class="ibtn" onclick="swap()" title="Invertir">⇄</button>
+      <div class="field"><label for="to-cur">Destino</label><select id="to-cur"></select></div>
+      <button class="pbtn" onclick="convert()">Convertir</button>
     </div>
-
-    <!-- Historial -->
-    <div class="card" id="hist-card" style="display:none">
-      <div class="section-label" id="hist-title">Historial</div>
-      <div class="period-row">
-        <span style="font-size:12px;color:var(--text-secondary)">Período:</span>
-        <button class="period-btn active" onclick="setPeriod(7,this)">7 días</button>
-        <button class="period-btn" onclick="setPeriod(30,this)">30 días</button>
-        <button class="period-btn" onclick="setPeriod(90,this)">90 días</button>
-        <button class="period-btn" onclick="setPeriod(180,this)">180 días</button>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="hchart" role="img" aria-label="Historial del tipo de cambio seleccionado"></canvas>
-      </div>
-      <div class="hist-stats" id="hist-stats"></div>
+    <div class="row" style="margin-top:10px">
+      <div class="field" style="max-width:190px"><label for="date-input">Fecha de cotización</label><input type="date" id="date-input"></div>
+      <button class="pbtn" onclick="loadByDate()">Cargar fecha</button>
+      <button class="pbtn" onclick="loadLatest()">Hoy</button>
     </div>
-
-    <!-- Todas las cotizaciones -->
-    <div class="card" id="all-rates-card" style="display:none">
-      <div class="section-label">Todas las cotizaciones en ARS</div>
-      <div class="pills" id="all-pills"></div>
-      <p style="font-size:11px;color:var(--text-tertiary);margin-top:10px" id="rates-date-lbl"></p>
-    </div>
-
-    <footer>
-      Datos: <a href="https://estadisticascambiarias.bcra.gob.ar" target="_blank" rel="noopener">BCRA Estadísticas Cambiarias</a>
-      &mdash; Código fuente en GitHub
-    </footer>
+    <div class="srow"><span class="dot loading" id="sdot"></span><span id="stxt">Cargando cotizaciones del BCRA...</span></div>
+    <div id="errbox" style="display:none" class="ebox" role="alert"></div>
+    <div id="result-area" style="display:none"><div class="metrics" id="metrics-row"></div></div>
   </div>
 
-  <script>
-    /* ── Configuración ────────────────────────────────────────────────────── */
-    // Si tenés un proxy propio, reemplazá esta URL:
-    const BASE = 'https://bcra-proxy-dkqc.onrender.com/cotizaciones';
-    // Ejemplo con proxy: const BASE = 'https://tu-proxy.com/cotizaciones';
+  <div class="card" id="hist-card" style="display:none">
+    <div class="lbl" id="hist-title">Historial</div>
+    <div class="prow">
+      <span style="font-size:12px;color:var(--tx2)">Período:</span>
+      <button class="pbtn2 active" onclick="setPeriod(7,this)">7 días</button>
+      <button class="pbtn2" onclick="setPeriod(30,this)">30 días</button>
+      <button class="pbtn2" onclick="setPeriod(90,this)">90 días</button>
+      <button class="pbtn2" onclick="setPeriod(180,this)">180 días</button>
+    </div>
+    <div class="chart-wrap"><canvas id="hchart" role="img" aria-label="Historial del tipo de cambio seleccionado"></canvas></div>
+    <div class="hstats" id="hist-stats"></div>
+  </div>
 
-    /* ── Nombres de monedas ───────────────────────────────────────────────── */
-    const NAMES = {
-      ARS:'Peso argentino', USD:'Dólar EE.UU.', EUR:'Euro',
-      BRL:'Real brasileño', GBP:'Libra esterlina', CHF:'Franco suizo',
-      JPY:'Yen japonés', CNY:'Yuan chino', CAD:'Dólar canadiense',
-      AUD:'Dólar australiano', MXN:'Peso mexicano', CLP:'Peso chileno',
-      UYU:'Peso uruguayo', BOB:'Boliviano', PYG:'Guaraní paraguayo',
-      COP:'Peso colombiano', PEN:'Sol peruano', SEK:'Corona sueca',
-      NOK:'Corona noruega', DKK:'Corona danesa', HKD:'Dólar Hong Kong',
-      SGD:'Dólar Singapur', NZD:'Dólar neozelandés', DOP:'Peso dominicano',
-      CUP:'Peso cubano', VEF:'Bolívar venezolano',
-    };
+  <div class="card" id="all-rates-card" style="display:none">
+    <div class="lbl">Todas las cotizaciones en ARS</div>
+    <div class="pills" id="all-pills"></div>
+    <p style="font-size:11px;color:var(--tx3);margin-top:10px" id="rates-date-lbl"></p>
+  </div>
 
-    /* ── Estado ───────────────────────────────────────────────────────────── */
-    let rates = {}, rateDate = '', histChart = null, histDays = 7;
-    let fromCur = 'USD', toCur = 'ARS';
+  <footer>Datos: <a href="https://api.bcra.gob.ar" target="_blank" rel="noopener">api.bcra.gob.ar</a> · Estadísticas Cambiarias v1.0</footer>
+</div>
 
-    /* ── Utilidades ───────────────────────────────────────────────────────── */
-    const fmt = (n, d) => new Intl.NumberFormat('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
-    const fmtDate = d => d.toISOString().slice(0, 10);
-    const prec = v => v < 1 ? 6 : v < 100 ? 4 : 2;
+<script>
+  /* ── Configuración ── */
+  // Reemplazá con la URL de tu proxy en Render:
+  const PROXY = 'https://bcra-proxy-dkqc.onrender.com';
 
-    function setStatus(st, msg) {
-      const d = document.getElementById('sdot');
-      d.className = 'dot' + (st === 'loading' ? ' loading' : st === 'error' ? ' error' : '');
-      document.getElementById('stxt').textContent = msg;
-    }
-    function showErr(m) { const e = document.getElementById('errbox'); e.textContent = m; e.style.display = 'block'; }
-    function hideErr() { document.getElementById('errbox').style.display = 'none'; }
+  /* ── Nombres de monedas ── */
+  const NAMES = {
+    ARS:'Peso argentino',USD:'Dólar EE.UU.',EUR:'Euro',BRL:'Real brasileño',
+    GBP:'Libra esterlina',CHF:'Franco suizo',JPY:'Yen japonés',CNY:'Yuan chino',
+    CAD:'Dólar canadiense',AUD:'Dólar australiano',MXN:'Peso mexicano',
+    CLP:'Peso chileno',UYU:'Peso uruguayo',BOB:'Boliviano',PYG:'Guaraní',
+    COP:'Peso colombiano',PEN:'Sol peruano',SEK:'Corona sueca',NOK:'Corona noruega',
+    DKK:'Corona danesa',HKD:'Dólar Hong Kong',SGD:'Dólar Singapur',
+    NZD:'Dólar neozelandés',XAU:'Oro (onza troy)',XAG:'Plata (onza troy)',
+    XDR:'DEG (FMI)',ZAR:'Rand sudafricano',TRY:'Lira turca',INR:'Rupia india',
+    RUB:'Rublo ruso',
+  };
 
-    /* ── API ──────────────────────────────────────────────────────────────── */
-    async function fetchRates(dateStr) {
-      const to = dateStr || fmtDate(new Date());
-      const from = new Date(to); from.setDate(from.getDate() - 5);
-      const url = `${BASE}?fechadesde=${fmtDate(from)}&fechahasta=${to}&limit=200`;
-      const r = await fetch(url, { headers: { Accept: 'application/json' } });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
-      return data.results || data || [];
-    }
+  /* ── Estado ── */
+  let rates = {}, rateDate = '', histChart = null, histDays = 7;
+  let fromCur = 'USD', toCur = 'ARS';
 
-    async function fetchHistory(days) {
-      const end = new Date();
-      const start = new Date(); start.setDate(start.getDate() - days);
-      const url = `${BASE}?fechadesde=${fmtDate(start)}&fechahasta=${fmtDate(end)}&limit=1000`;
-      const r = await fetch(url, { headers: { Accept: 'application/json' } });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
-      return data.results || data || [];
-    }
+  /* ── Utils ── */
+  const fmt = (n,d) => new Intl.NumberFormat('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+  const fmtDate = d => d.toISOString().slice(0,10);
+  const prec = v => v < 0.01 ? 6 : v < 1 ? 4 : v < 100 ? 2 : 0;
+  const setStatus = (st,msg) => {
+    document.getElementById('sdot').className = 'dot'+(st==='loading'?' loading':st==='error'?' error':'');
+    document.getElementById('stxt').textContent = msg;
+  };
+  const showErr = m => { const e=document.getElementById('errbox'); e.textContent=m; e.style.display='block'; };
+  const hideErr = () => document.getElementById('errbox').style.display='none';
 
-    /* ── Procesamiento ────────────────────────────────────────────────────── */
-    function rowsToByDate(rows) {
-      const byDate = {};
-      rows.forEach(it => {
-        const dt = it.fecha || it.date || '';
-        if (!byDate[dt]) byDate[dt] = { ARS: 1 };
-        const code = (it.codigoMoneda || it.codigo || '').toUpperCase();
-        const val = parseFloat(it.tipoPase || it.cotizacion || it.valor || 0);
-        if (code && val > 0) byDate[dt][code] = val;
-      });
-      return byDate;
-    }
+  /* ── Fetch cotizaciones del día ── */
+  async function fetchCotizaciones(fecha) {
+    const f = fecha || fmtDate(new Date());
+    const r = await fetch(`${PROXY}/cotizaciones?fecha=${f}`, { headers:{ Accept:'application/json' } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
 
-    function processLatest(rows) {
-      const byDate = rowsToByDate(rows);
-      const dates = Object.keys(byDate).sort().reverse();
-      if (!dates.length) return false;
-      rates = byDate[dates[0]];
-      if (!rates.ARS) rates.ARS = 1;
-      rateDate = dates[0];
-      return true;
-    }
+  /* ── Fetch historial de una moneda ── */
+  async function fetchHistorial(moneda, fechaDesde, fechaHasta) {
+    const url = `${PROXY}/historial/${moneda}?fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}&limit=365`;
+    const r = await fetch(url, { headers:{ Accept:'application/json' } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
 
-    /* ── UI: combos y pills ──────────────────────────────────────────────── */
-    function populateCombos() {
-      const order = ['USD', 'EUR', 'BRL', 'GBP', 'ARS'];
-      const keys = Object.keys(rates).sort((a, b) => {
-        const ai = order.indexOf(a), bi = order.indexOf(b);
-        if (ai >= 0 && bi >= 0) return ai - bi;
-        if (ai >= 0) return -1; if (bi >= 0) return 1;
-        return a.localeCompare(b);
-      });
-      ['from-cur', 'to-cur'].forEach(id => {
-        const s = document.getElementById(id);
-        const prev = s.value;
-        s.innerHTML = '';
-        keys.forEach(k => {
-          const o = document.createElement('option');
-          o.value = k;
-          o.textContent = `${k}  ${NAMES[k] || ''}`;
-          s.appendChild(o);
-        });
-        if (prev && rates[prev]) s.value = prev;
-      });
-      document.getElementById('from-cur').value = fromCur in rates ? fromCur : 'USD';
-      document.getElementById('to-cur').value = toCur in rates ? toCur : 'ARS';
-    }
+  /* ── Procesar respuesta de cotizaciones ── */
+  function processCotizaciones(data) {
+    // La API devuelve { status, results: { fecha, detalle: [{codigoMoneda, tipoPase, ...}] } }
+    const results = data.results;
+    if (!results) throw new Error('Respuesta inesperada de la API');
 
-    function populatePills() {
-      const g = document.getElementById('all-pills');
-      g.innerHTML = '';
-      Object.keys(rates).filter(c => c !== 'ARS').sort().forEach(c => {
-        const p = document.createElement('div');
-        p.className = 'pill';
-        p.innerHTML = `<span class="pill-code">${c}</span><span class="pill-val">${fmt(rates[c], 2)} ARS</span>`;
-        g.appendChild(p);
-      });
-      document.getElementById('rates-date-lbl').textContent = `Fecha: ${rateDate}`;
-      document.getElementById('all-rates-card').style.display = 'block';
-    }
+    const fecha = results.fecha || fmtDate(new Date());
+    const detalle = results.detalle || [];
 
-    /* ── Conversión ──────────────────────────────────────────────────────── */
-    function convert() {
-      const amount = parseFloat(document.getElementById('amount').value) || 0;
-      fromCur = document.getElementById('from-cur').value;
-      toCur = document.getElementById('to-cur').value;
-      if (!rates[fromCur] || !rates[toCur]) return;
-
-      const inARS = amount * rates[fromCur];
-      const result = inARS / rates[toCur];
-      const directRate = rates[fromCur] / rates[toCur];
-      const inverseRate = rates[toCur] / rates[fromCur];
-
-      document.getElementById('metrics-row').innerHTML = `
-        <div class="metric">
-          <div class="metric-label">Resultado</div>
-          <div class="metric-value">${fmt(result, prec(result))} ${toCur}</div>
-          <div class="metric-sub">${fmt(amount, 2)} ${fromCur} convertidos</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Tasa directa</div>
-          <div class="metric-value">1 ${fromCur} = ${fmt(directRate, prec(directRate))} ${toCur}</div>
-          <div class="metric-sub">Cotización al ${rateDate}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Tasa inversa</div>
-          <div class="metric-value">1 ${toCur} = ${fmt(inverseRate, prec(inverseRate))} ${fromCur}</div>
-          <div class="metric-sub">Par invertido</div>
-        </div>`;
-      document.getElementById('result-area').style.display = 'block';
-      loadHistorical();
-    }
-
-    /* ── Historial ───────────────────────────────────────────────────────── */
-    async function loadHistorical() {
-      const from = document.getElementById('from-cur').value;
-      const to = document.getElementById('to-cur').value;
-      setStatus('loading', 'Cargando historial...');
-      try {
-        const rows = await fetchHistory(histDays);
-        buildHistory(rows, from, to);
-      } catch(e) {
-        setStatus('error', 'Error al cargar historial');
-        showErr(`Error historial: ${e.message}`);
+    const newRates = { ARS: 1 };
+    detalle.forEach(item => {
+      if (item.codigoMoneda && item.tipoPase > 0) {
+        newRates[item.codigoMoneda] = item.tipoPase;
       }
-    }
+    });
 
-    function buildHistory(rows, from, to) {
-      const byDate = rowsToByDate(rows);
-      const dates = Object.keys(byDate).sort();
-      const points = dates.map(dt => {
-        const dr = byDate[dt];
-        if (!dr[from] || !dr[to]) return null;
-        return { x: dt, y: dr[from] / dr[to] };
+    if (Object.keys(newRates).length < 2) throw new Error('Sin cotizaciones en la respuesta');
+
+    rates = newRates;
+    rateDate = fecha.slice(0, 10);
+  }
+
+  /* ── Poblar combos ── */
+  function populateCombos() {
+    const order = ['USD','EUR','BRL','GBP','ARS'];
+    const keys = Object.keys(rates).sort((a,b) => {
+      const ai=order.indexOf(a), bi=order.indexOf(b);
+      if(ai>=0&&bi>=0) return ai-bi;
+      if(ai>=0) return -1; if(bi>=0) return 1;
+      return a.localeCompare(b);
+    });
+    ['from-cur','to-cur'].forEach(id => {
+      const s=document.getElementById(id), prev=s.value;
+      s.innerHTML='';
+      keys.forEach(k => {
+        const o=document.createElement('option');
+        o.value=k; o.textContent=`${k}  ${NAMES[k]||''}`;
+        s.appendChild(o);
+      });
+      if(prev&&rates[prev]) s.value=prev;
+    });
+    document.getElementById('from-cur').value = fromCur in rates ? fromCur : 'USD';
+    document.getElementById('to-cur').value = toCur in rates ? toCur : 'ARS';
+  }
+
+  /* ── Poblar pills ── */
+  function populatePills() {
+    const g=document.getElementById('all-pills');
+    g.innerHTML='';
+    Object.keys(rates).filter(c=>c!=='ARS').sort().forEach(c => {
+      const p=document.createElement('div'); p.className='pill';
+      p.innerHTML=`<b>${c}</b><span>${fmt(rates[c],2)} ARS</span>`;
+      g.appendChild(p);
+    });
+    document.getElementById('rates-date-lbl').textContent=`Fecha: ${rateDate}`;
+    document.getElementById('all-rates-card').style.display='block';
+  }
+
+  /* ── Conversión ── */
+  function convert() {
+    const amount = parseFloat(document.getElementById('amount').value)||0;
+    fromCur = document.getElementById('from-cur').value;
+    toCur = document.getElementById('to-cur').value;
+    if(!rates[fromCur]||!rates[toCur]) return;
+
+    const inARS = amount * rates[fromCur];
+    const result = inARS / rates[toCur];
+    const direct = rates[fromCur] / rates[toCur];
+    const inverse = rates[toCur] / rates[fromCur];
+
+    document.getElementById('metrics-row').innerHTML=`
+      <div class="metric">
+        <div class="metric-lbl">Resultado</div>
+        <div class="metric-val">${fmt(result,prec(result))} ${toCur}</div>
+        <div class="metric-sub">${fmt(amount,2)} ${fromCur} convertidos</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Tasa directa</div>
+        <div class="metric-val">1 ${fromCur} = ${fmt(direct,prec(direct))} ${toCur}</div>
+        <div class="metric-sub">Cotización al ${rateDate}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Tasa inversa</div>
+        <div class="metric-val">1 ${toCur} = ${fmt(inverse,prec(inverse))} ${fromCur}</div>
+        <div class="metric-sub">Par invertido</div>
+      </div>`;
+    document.getElementById('result-area').style.display='block';
+    loadHistorical();
+  }
+
+  /* ── Historial ── */
+  async function loadHistorical() {
+    const from = document.getElementById('from-cur').value;
+    const to = document.getElementById('to-cur').value;
+
+    // Para historial cruzado: traemos la moneda que no sea ARS
+    // Si ninguna es ARS, usamos "from" como referencia en ARS y calculamos el cruce
+    const moneda = from !== 'ARS' ? from : to;
+    if (moneda === 'ARS') return; // ARS/ARS no tiene sentido
+
+    const end = new Date();
+    const start = new Date(); start.setDate(start.getDate() - histDays);
+
+    setStatus('loading', 'Cargando historial...');
+    try {
+      const data = await fetchHistorial(moneda, fmtDate(start), fmtDate(end));
+      const results = data.results || [];
+
+      // results es array de { fecha, detalle: [{codigoMoneda, tipoPase}] }
+      // Cada entrada tiene una fecha y las cotizaciones de ESE día
+      const points = results.map(entry => {
+        const d = entry.detalle || [];
+        const fromRate = from === 'ARS' ? 1 : (d.find(x=>x.codigoMoneda===from)||{}).tipoPase;
+        const toRate = to === 'ARS' ? 1 : (d.find(x=>x.codigoMoneda===to)||{}).tipoPase;
+        if (!fromRate || !toRate) return null;
+        return { x: entry.fecha.slice(0,10), y: fromRate / toRate };
       }).filter(Boolean);
 
-      if (!points.length) { setStatus('error', 'Sin datos históricos para este par'); return; }
+      if (!points.length) { setStatus('ok', `Datos al ${rateDate}`); return; }
 
       renderChart(points, from, to);
 
-      const vals = points.map(p => p.y);
-      const minV = Math.min(...vals), maxV = Math.max(...vals);
-      const first = vals[0], last = vals[vals.length - 1];
-      const chg = (last - first) / first * 100;
-      const chgStr = (chg >= 0 ? '+' : '') + fmt(chg, 2) + '%';
-      const chgCls = chg >= 0 ? 'trend-up' : 'trend-dn';
-      const p = prec(last);
+      const vals = points.map(p=>p.y);
+      const minV=Math.min(...vals), maxV=Math.max(...vals);
+      const chg=(vals[vals.length-1]-vals[0])/vals[0]*100;
+      const chgStr=(chg>=0?'+':'')+fmt(chg,2)+'%';
+      const p = prec(vals[vals.length-1]);
 
-      document.getElementById('hist-stats').innerHTML = `
-        <div class="metric" style="flex:1;min-width:100px">
-          <div class="metric-label">Mínimo período</div>
-          <div class="metric-value">${fmt(minV, p)}</div>
-        </div>
-        <div class="metric" style="flex:1;min-width:100px">
-          <div class="metric-label">Máximo período</div>
-          <div class="metric-value">${fmt(maxV, p)}</div>
-        </div>
-        <div class="metric" style="flex:1;min-width:100px">
-          <div class="metric-label">Variación</div>
-          <div class="metric-value ${chgCls}">${chgStr}</div>
-        </div>
-        <div class="metric" style="flex:1;min-width:100px">
-          <div class="metric-label">Último valor</div>
-          <div class="metric-value">${fmt(last, p)}</div>
-        </div>`;
+      document.getElementById('hist-stats').innerHTML=`
+        <div class="metric" style="flex:1;min-width:100px"><div class="metric-lbl">Mínimo</div><div class="metric-val">${fmt(minV,p)}</div></div>
+        <div class="metric" style="flex:1;min-width:100px"><div class="metric-lbl">Máximo</div><div class="metric-val">${fmt(maxV,p)}</div></div>
+        <div class="metric" style="flex:1;min-width:100px"><div class="metric-lbl">Variación</div><div class="metric-val ${chg>=0?'tup':'tdn'}">${chgStr}</div></div>
+        <div class="metric" style="flex:1;min-width:100px"><div class="metric-lbl">Último</div><div class="metric-val">${fmt(vals[vals.length-1],p)}</div></div>`;
 
-      document.getElementById('hist-title').textContent = `Historial ${from}/${to} — últimos ${histDays} días`;
-      document.getElementById('hist-card').style.display = 'block';
-      setStatus('ok', `Datos al ${rateDate} · ${Object.keys(rates).length} monedas disponibles`);
+      document.getElementById('hist-title').textContent=`Historial ${from}/${to} — últimos ${histDays} días`;
+      document.getElementById('hist-card').style.display='block';
+      setStatus('ok', `Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
+    } catch(e) {
+      setStatus('error','Error al cargar historial');
+      showErr(`Error historial: ${e.message}`);
     }
+  }
 
-    function renderChart(points, from, to) {
-      const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
-      const lineColor = isDark ? '#85B7EB' : '#185FA5';
-      const fillColor = isDark ? 'rgba(133,183,235,0.1)' : 'rgba(24,95,165,0.07)';
-      const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-      const textColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.38)';
-
-      if (histChart) { histChart.destroy(); histChart = null; }
-      const ctx = document.getElementById('hchart').getContext('2d');
-      const p = prec(points[0].y);
-
-      histChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: points.map(pt => pt.x),
-          datasets: [{
-            label: `${from}/${to}`,
-            data: points.map(pt => pt.y),
-            borderColor: lineColor,
-            backgroundColor: fillColor,
-            fill: true,
-            borderWidth: 1.5,
-            pointRadius: points.length > 30 ? 0 : 3,
-            pointHoverRadius: 5,
-            tension: 0.3,
-          }]
+  function renderChart(points, from, to) {
+    const isDark = matchMedia('(prefers-color-scheme:dark)').matches;
+    const line = isDark?'#85B7EB':'#185FA5';
+    const fill = isDark?'rgba(133,183,235,0.1)':'rgba(24,95,165,0.07)';
+    const grid = isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';
+    const text = isDark?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.38)';
+    const p = prec(points[0].y);
+    if(histChart){histChart.destroy();histChart=null}
+    histChart = new Chart(document.getElementById('hchart').getContext('2d'),{
+      type:'line',
+      data:{ labels:points.map(pt=>pt.x), datasets:[{
+        label:`${from}/${to}`, data:points.map(pt=>pt.y),
+        borderColor:line, backgroundColor:fill, fill:true,
+        borderWidth:1.5, pointRadius:points.length>30?0:3,
+        pointHoverRadius:5, tension:0.3
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{
+            label:ctx=>`${fmt(ctx.parsed.y,p)} ${to}`,
+            title:ctx=>ctx[0].label
+          }}
         },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: ctx => `${fmt(ctx.parsed.y, p)} ${to}`,
-                title: ctx => ctx[0].label,
-              }
-            }
-          },
-          scales: {
-            x: { ticks: { color: textColor, maxTicksLimit: 8, maxRotation: 0, font: { size: 11 } }, grid: { color: gridColor } },
-            y: { ticks: { color: textColor, font: { size: 11 }, callback: v => fmt(v, p) }, grid: { color: gridColor } },
-          }
+        scales:{
+          x:{ticks:{color:text,maxTicksLimit:8,maxRotation:0,font:{size:11}},grid:{color:grid}},
+          y:{ticks:{color:text,font:{size:11},callback:v=>fmt(v,p)},grid:{color:grid}}
         }
-      });
-    }
-
-    /* ── Controles ───────────────────────────────────────────────────────── */
-    function swap() {
-      const f = document.getElementById('from-cur');
-      const t = document.getElementById('to-cur');
-      [f.value, t.value] = [t.value, f.value];
-      convert();
-    }
-
-    function setPeriod(days, btn) {
-      histDays = days;
-      document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      loadHistorical();
-    }
-
-    /* ── Carga de datos ──────────────────────────────────────────────────── */
-    function initDateInput() {
-      const d = document.getElementById('date-input');
-      const t = new Date();
-      d.value = fmtDate(t);
-      d.max = fmtDate(t);
-    }
-
-    async function loadLatest() {
-      setStatus('loading', 'Consultando BCRA...');
-      hideErr();
-      initDateInput();
-      try {
-        const rows = await fetchRates();
-        if (!processLatest(rows)) { loadFallback(); return; }
-        populateCombos(); populatePills();
-        setStatus('ok', `Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
-        convert();
-      } catch(e) {
-        showErr(`No se pudo conectar con BCRA: ${e.message}. Mostrando datos de ejemplo.`);
-        loadFallback();
       }
-    }
+    });
+  }
 
-    async function loadByDate() {
-      const d = document.getElementById('date-input').value;
-      if (!d) return;
-      setStatus('loading', `Consultando cotizaciones del ${d}...`);
-      hideErr();
-      try {
-        const rows = await fetchRates(d);
-        if (!processLatest(rows)) { showErr('Sin datos para esa fecha.'); return; }
-        populateCombos(); populatePills();
-        setStatus('ok', `Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
-        convert();
-      } catch(e) { showErr(`Error: ${e.message}`); setStatus('error', 'Error'); }
-    }
+  /* ── Controles ── */
+  function swap() {
+    const f=document.getElementById('from-cur'), t=document.getElementById('to-cur');
+    [f.value,t.value]=[t.value,f.value]; convert();
+  }
+  function setPeriod(days,btn) {
+    histDays=days;
+    document.querySelectorAll('.pbtn2').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); loadHistorical();
+  }
 
-    function loadFallback() {
-      rates = {
-        ARS:1, USD:1050, EUR:1145, BRL:210, GBP:1330, CHF:1190,
-        JPY:7.2, CNY:145, CAD:775, AUD:680, MXN:56, CLP:1.12,
-        UYU:27, COP:0.26, PEN:280, SEK:97, NOK:97, DKK:154,
-        NZD:630, HKD:134, SGD:780,
-      };
-      rateDate = 'ejemplo (sin conexión)';
+  /* ── Carga de datos ── */
+  function initDateInput() {
+    const d=document.getElementById('date-input'), t=new Date();
+    d.value=fmtDate(t); d.max=fmtDate(t);
+  }
+
+  async function loadLatest() {
+    setStatus('loading','Consultando BCRA...'); hideErr(); initDateInput();
+    try {
+      const data = await fetchCotizaciones();
+      processCotizaciones(data);
       populateCombos(); populatePills();
-      setStatus('error', 'Usando datos de ejemplo — BCRA no disponible');
+      setStatus('ok',`Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
       convert();
+    } catch(e) {
+      showErr(`Error al conectar con BCRA: ${e.message}`);
+      setStatus('error','Error de conexión');
+      loadFallback();
     }
+  }
 
-    /* ── Init ────────────────────────────────────────────────────────────── */
-    initDateInput();
-    loadLatest();
+  async function loadByDate() {
+    const d=document.getElementById('date-input').value;
+    if(!d) return;
+    setStatus('loading',`Consultando cotizaciones del ${d}...`); hideErr();
+    try {
+      const data = await fetchCotizaciones(d);
+      processCotizaciones(data);
+      populateCombos(); populatePills();
+      setStatus('ok',`Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
+      convert();
+    } catch(e) { showErr(`Error: ${e.message}`); setStatus('error','Error'); }
+  }
 
-    document.getElementById('amount').addEventListener('input', () => { if (Object.keys(rates).length) convert(); });
-    document.getElementById('from-cur').addEventListener('change', convert);
-    document.getElementById('to-cur').addEventListener('change', convert);
-  </script>
+  function loadFallback() {
+    rates={ARS:1,USD:1050,EUR:1145,BRL:210,GBP:1330,CHF:1190,JPY:7.2,CNY:145,CAD:775,AUD:680,UYU:27,CLP:1.12,COP:0.26,PEN:280};
+    rateDate='ejemplo (sin conexión)';
+    populateCombos(); populatePills();
+    setStatus('error','Usando datos de ejemplo — proxy no disponible');
+    convert();
+  }
+
+  /* ── Init ── */
+  initDateInput(); loadLatest();
+  document.getElementById('amount').addEventListener('input',()=>{if(Object.keys(rates).length)convert()});
+  document.getElementById('from-cur').addEventListener('change',convert);
+  document.getElementById('to-cur').addEventListener('change',convert);
+</script>
 </body>
 </html>
