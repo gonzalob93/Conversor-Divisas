@@ -333,7 +333,7 @@
           : (d.find(x => x.codigoMoneda === to) || {}).tipoCotizacion;
         if (!fromRate || !toRate) return null;
         return { x: (entry.fecha || '').slice(0, 10), y: fromRate / toRate };
-      }).filter(Boolean);
+      }).filter(Boolean).sort((a, b) => a.x.localeCompare(b.x));
  
       if (!points.length) {
         setStatus('ok', `Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
