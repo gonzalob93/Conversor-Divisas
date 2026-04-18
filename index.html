@@ -301,13 +301,10 @@
       const r = usdValue(c);
       if (!r) return;
       const decimales = r.val >= 100 ? 2 : r.val >= 1 ? 4 : 6;
+      const notacion = PASE_DIRECTO.has(c) ? `${c}/USD` : `USD/${c}`;
       const p = document.createElement('div');
       p.className = 'pill';
-      if (c === 'ARS') {
-        p.innerHTML = `<b>${c}</b><span>${fmt(r.val, 2)} ${r.sufijo}</span>`;
-      } else {
-        p.innerHTML = `<b>${c}</b><span>${fmt(r.val, decimales)} ${r.sufijo}</span>`;
-      }
+      p.innerHTML = `<b>${c}</b><span>${notacion} ${fmt(r.val, decimales)}</span>`;
       g.appendChild(p);
     });
 
