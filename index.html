@@ -478,15 +478,28 @@
   }
  
   /* ── Carga de datos ──────────────────────────────────────────────── */
-  function initDateInput() {
-    const d = document.getElementById('date-input'), t = new Date();
-    d.value = fmtDate(t); d.max = fmtDate(t);
+
+  // Retrocede al viernes si la fecha cae en fin de semana (opera en UTC).
+  function viernesSiFinDeSemana(fecha) {
+    const d = new Date(fecha);
+    const dow = d.getUTCDay(); // 0=dom, 6=sab
+    if (dow === 6) d.setUTCDate(d.getUTCDate() - 1); // sáb → vier
+    if (dow === 0) d.setUTCDate(d.getUTCDate() - 2); // dom → vier
+    return d;
   }
- 
+
+  function initDateInput() {
+    const t = viernesSiFinDeSemana(new Date());
+    const d = document.getElementById('date-input');
+    d.value = fmtDate(t);
+    d.max   = fmtDate(t);
+  }
+
   async function loadLatest() {
     setStatus('loading', 'Consultando BCRA...'); hideErr(); initDateInput();
     try {
-      const data = await apiFetch('/cotizaciones');
+      const fecha = fmtDate(viernesSiFinDeSemana(new Date()));
+      const data  = await apiFetch(`/cotizaciones?fecha=${fecha}`);
       processCotizaciones(data);
       populateCombos(); populatePills();
       setStatus('ok', `Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
@@ -497,13 +510,21 @@
       loadFallback();
     }
   }
- 
+
   async function loadByDate() {
-    const d = document.getElementById('date-input').value;
-    if (!d) return;
-    setStatus('loading', `Consultando cotizaciones del ${d}...`); hideErr();
+    const raw = document.getElementById('date-input').value;
+    if (!raw) return;
+    // Parseamos como UTC para evitar desfases de zona horaria
+    const ajustada = viernesSiFinDeSemana(new Date(raw + 'T00:00:00Z'));
+    const fecha = fmtDate(ajustada);
+    if (fecha !== raw) {
+      setStatus('loading', `Fin de semana — cargando datos del viernes ${fecha}...`);
+    } else {
+      setStatus('loading', `Consultando cotizaciones del ${fecha}...`);
+    }
+    hideErr();
     try {
-      const data = await apiFetch(`/cotizaciones?fecha=${d}`);
+      const data = await apiFetch(`/cotizaciones?fecha=${fecha}`);
       processCotizaciones(data);
       populateCombos(); populatePills();
       setStatus('ok', `Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
