@@ -156,7 +156,7 @@
   </div>
  
   <div class="card" id="all-rates-card" style="display:none">
-    <div class="slabel">Todas las cotizaciones en ARS</div>
+    <div class="slabel">Todas las cotizaciones en USD</div>
     <div class="pills" id="all-pills"></div>
     <p style="font-size:11px;color:var(--tx3);margin-top:10px" id="rates-date-lbl"></p>
   </div>
@@ -189,7 +189,7 @@
   };
  
   /* ── Estado ──────────────────────────────────────────────────────── */
-  let rates = {}, rateDate = '', histChart = null, histDays = 7;
+  let rates = {}, pases = {}, rateDate = '', histChart = null, histDays = 7;
   let fromCur = 'USD', toCur = 'ARS';
  
   /* ── Utils ───────────────────────────────────────────────────────── */
@@ -225,12 +225,15 @@
     if (data.status !== 200 || !data.results) throw new Error('Respuesta inesperada');
     const { fecha, detalle } = data.results;
     const newRates = { ARS: 1 };
+    const newPases = {};
     detalle.forEach(item => {
       const val = item.tipoCotizacion;
       if (item.codigoMoneda && val > 0) newRates[item.codigoMoneda] = val;
+      if (item.codigoMoneda && item.tipoPase > 0) newPases[item.codigoMoneda] = item.tipoPase;
     });
     if (Object.keys(newRates).length < 2) throw new Error('Sin cotizaciones');
     rates = newRates;
+    pases = newPases;
     rateDate = (fecha || '').slice(0, 10);
   }
  
@@ -259,15 +262,55 @@
   }
  
   /* ── Pills ───────────────────────────────────────────────────────── */
+  // Divisas que ya traen tipoPase expresado como USD por unidad (se muestran directo)
+  const PASE_DIRECTO = new Set(['EUR', 'GBP', 'CHF', 'XDR']);
+  // Divisas excluidas del panel
+  const EXCLUIDAS    = new Set(['REF']);
+
+  function usdValue(codigo) {
+    if (codigo === 'ARS') {
+      // Mostrar ARS: cuántos pesos vale 1 USD (tipoCotizacion del USD)
+      return { val: rates['USD'] || null, sufijo: 'ARS / USD' };
+    }
+    if (PASE_DIRECTO.has(codigo)) {
+      // tipoPase ya es USD por unidad de la divisa
+      const v = pases[codigo];
+      return v ? { val: v, sufijo: 'USD' } : null;
+    }
+    // Resto: 1 / tipoPase
+    const p = pases[codigo];
+    return p ? { val: 1 / p, sufijo: 'USD' } : null;
+  }
+
   function populatePills() {
     const g = document.getElementById('all-pills');
     g.innerHTML = '';
-    Object.keys(rates).filter(c => c !== 'ARS').sort().forEach(c => {
+
+    const orden = ['ARS', 'EUR', 'GBP', 'CHF', 'BRL', 'UYU', 'CLP'];
+    const todos  = Object.keys(rates)
+      .filter(c => c !== 'USD' && !EXCLUIDAS.has(c))
+      .sort((a, b) => {
+        const ai = orden.indexOf(a), bi = orden.indexOf(b);
+        if (ai >= 0 && bi >= 0) return ai - bi;
+        if (ai >= 0) return -1;
+        if (bi >= 0) return 1;
+        return a.localeCompare(b);
+      });
+
+    todos.forEach(c => {
+      const r = usdValue(c);
+      if (!r) return;
+      const decimales = r.val >= 100 ? 2 : r.val >= 1 ? 4 : 6;
       const p = document.createElement('div');
       p.className = 'pill';
-      p.innerHTML = `<b>${c}</b><span>${fmt(rates[c], 2)} ARS</span>`;
+      if (c === 'ARS') {
+        p.innerHTML = `<b>${c}</b><span>${fmt(r.val, 2)} ${r.sufijo}</span>`;
+      } else {
+        p.innerHTML = `<b>${c}</b><span>${fmt(r.val, decimales)} ${r.sufijo}</span>`;
+      }
       g.appendChild(p);
     });
+
     document.getElementById('rates-date-lbl').textContent = `Fecha: ${rateDate}`;
     document.getElementById('all-rates-card').style.display = 'block';
   }
@@ -473,6 +516,21 @@
       ARS:1, USD:1370, EUR:1605, BRL:272, GBP:1843,
       CHF:1735, JPY:8.6, CNY:200, CAD:990, AUD:969,
       UYU:34, CLP:1.5, COP:0.37, PEN:404,
+    };
+    // tipoPase aproximados (moneda extranjera por ARS)
+    // EUR/GBP/CHF: tipoPase = USD por unidad (directo)
+    // Resto: tipoPase = 1 / (cotización en USD) → se invierte en usdValue()
+    pases = {
+      EUR:1.172, GBP:1.346, CHF:1.267,
+      BRL: 1/0.731,   // ~1.368 → 1/1.368 ≈ 0.731
+      JPY: 1/145.8,
+      CNY: 1/6.85,
+      CAD: 1/1.383,
+      AUD: 1/1.414,
+      UYU: 1/40.3,
+      CLP: 1/913,
+      COP: 1/3700,
+      PEN: 1/3.39,
     };
     rateDate = 'ejemplo (sin conexión)';
     populateCombos(); populatePills();
