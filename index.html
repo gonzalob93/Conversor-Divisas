@@ -480,27 +480,47 @@
   /* ── Carga de datos ──────────────────────────────────────────────── */
 
   // Retrocede al viernes si la fecha cae en fin de semana (opera en UTC).
-  function viernesSiFinDeSemana(fecha) {
-    const d = new Date(fecha);
-    const dow = d.getUTCDay(); // 0=dom, 6=sab
+  function saltarFinDeSemana(d) {
+    const dow = d.getUTCDay();
     if (dow === 6) d.setUTCDate(d.getUTCDate() - 1); // sáb → vier
     if (dow === 0) d.setUTCDate(d.getUTCDate() - 2); // dom → vier
     return d;
   }
 
-  function initDateInput() {
-    const t = viernesSiFinDeSemana(new Date());
+  // Intenta cargar cotizaciones para `fecha` (Date UTC).
+  // Si la API no trae datos (feriado), retrocede un día hábil y reintenta.
+  // Máximo MAX_RETROCESO días hacia atrás para no loopar infinito.
+  const MAX_RETROCESO = 10;
+
+  async function fetchHabilMasReciente(desde) {
+    let d = saltarFinDeSemana(new Date(desde));
+    for (let intento = 0; intento < MAX_RETROCESO; intento++) {
+      const fecha = fmtDate(d);
+      const data  = await apiFetch(`/cotizaciones?fecha=${fecha}`);
+      // processCotizaciones lanza si no hay resultados válidos
+      try {
+        processCotizaciones(data);
+        return fecha; // éxito
+      } catch(_) {
+        // Sin datos para esta fecha → retroceder un día hábil
+        d.setUTCDate(d.getUTCDate() - 1);
+        d = saltarFinDeSemana(d);
+      }
+    }
+    throw new Error('No se encontraron cotizaciones en los últimos días');
+  }
+
+  function initDateInput(fechaStr) {
     const d = document.getElementById('date-input');
-    d.value = fmtDate(t);
-    d.max   = fmtDate(t);
+    d.value = fechaStr;
+    d.max   = fechaStr;
   }
 
   async function loadLatest() {
-    setStatus('loading', 'Consultando BCRA...'); hideErr(); initDateInput();
+    setStatus('loading', 'Consultando BCRA...'); hideErr();
     try {
-      const fecha = fmtDate(viernesSiFinDeSemana(new Date()));
-      const data  = await apiFetch(`/cotizaciones?fecha=${fecha}`);
-      processCotizaciones(data);
+      const fecha = await fetchHabilMasReciente(new Date());
+      initDateInput(fecha);
       populateCombos(); populatePills();
       setStatus('ok', `Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
       convert();
@@ -514,18 +534,13 @@
   async function loadByDate() {
     const raw = document.getElementById('date-input').value;
     if (!raw) return;
-    // Parseamos como UTC para evitar desfases de zona horaria
-    const ajustada = viernesSiFinDeSemana(new Date(raw + 'T00:00:00Z'));
-    const fecha = fmtDate(ajustada);
-    if (fecha !== raw) {
-      setStatus('loading', `Fin de semana — cargando datos del viernes ${fecha}...`);
-    } else {
-      setStatus('loading', `Consultando cotizaciones del ${fecha}...`);
-    }
-    hideErr();
+    setStatus('loading', `Consultando cotizaciones del ${raw}...`); hideErr();
     try {
-      const data = await apiFetch(`/cotizaciones?fecha=${fecha}`);
-      processCotizaciones(data);
+      const fecha = await fetchHabilMasReciente(new Date(raw + 'T00:00:00Z'));
+      if (fecha !== raw) {
+        setStatus('loading', `Sin datos para ${raw} — cargando último día hábil (${fecha})...`);
+        document.getElementById('date-input').value = fecha;
+      }
       populateCombos(); populatePills();
       setStatus('ok', `Datos al ${rateDate} · ${Object.keys(rates).length} monedas`);
       convert();
